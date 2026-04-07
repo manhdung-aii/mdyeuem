@@ -1,6 +1,64 @@
 -- [[ NMD HUB - FINAL ULTIMATE 2026 ]] --
 -- NHÀ SẢN XUẤT: MDyeuem 
+-- [[ NMD HUB - ISLAND FINDER LOGIC ]] --
 
+_G.AutoFindIsland = false -- Bật cái này để tự đi tìm
+_G.StopWhenFound = true   -- Dừng lại và bay vào khi thấy đảo
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.AutoFindIsland then
+            pcall(function()
+                -- 1. DANH SÁCH CÁC ĐẢO CẦN TÌM
+                local Mirage = game:GetService("Workspace").Map:FindFirstChild("Mirage Island")
+                local Frozen = game:GetService("Workspace").Map:FindFirstChild("Frozen Dimension")
+                local SeaBeast = game:GetService("Workspace").Enemies:FindFirstChild("Sea Beast") -- Ví dụ quét cả SB
+
+                local TargetIsland = Mirage or Frozen
+
+                if TargetIsland then
+                    -- THÔNG BÁO CHO CHỦ TỊCH
+                    Rayfield:Notify({
+                        Title = "ĐÃ TÌM THẤY ĐẢO!",
+                        Content = "Phát hiện: " .. TargetIsland.Name .. ". Đang dừng hệ thống và bay vào đảo...",
+                        Duration = 10
+                    })
+
+                    -- 2. DỪNG TẤT CẢ CÁC HOẠT ĐỘNG TÌM KIẾM
+                    _G.AutoFindIsland = false
+                    _G.BoatFly = false
+                    
+                    -- Dừng thuyền ngay lập tức
+                    local Boat = GetMyBoat()
+                    if Boat and Boat:FindFirstChild("VehicleSeat") then
+                        Boat.VehicleSeat.LinearVelocity.Vector6 = Vector3.new(0,0,0)
+                        Boat.VehicleSeat.Anchored = true -- Khóa thuyền lại
+                    end
+
+                    -- 3. BAY VÀO TÂM ĐẢO
+                    task.wait(0.5)
+                    local IslandPos = TargetIsland:GetModelCFrame()
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = IslandPos * CFrame.new(0, 50, 0)
+                    
+                    print("Đã đáp cánh an toàn tại: " .. TargetIsland.Name)
+                else
+                    -- NẾU CHƯA THẤY ĐẢO: TIẾP TỤC ĐI TUẦN TRA (LÁI THUYỀN VÒNG TRÒN)
+                    DriveInCircles() 
+                end
+            end)
+        end
+    end
+end)
+
+-- HÀM LÁI THUYỀN TỰ ĐỘNG KHI CHƯA CÓ ĐẢO
+function DriveInCircles()
+    local Boat = GetMyBoat()
+    if Boat and Boat:FindFirstChild("VehicleSeat") then
+        Boat.VehicleSeat.MaxSpeed = _G.BoatSpeed
+        -- Logic điều khiển thuyền đi quanh khu vực Sea 6 (Danger 6)
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, "W", false, game)
+    end
+end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- [[ CẤU HÌNH HỆ THỐNG ]] --
