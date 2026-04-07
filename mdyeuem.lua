@@ -4,7 +4,142 @@
 
 _G.AutoFindIsland = false -- Bật cái này để tự đi tìm
 _G.StopWhenFound = true   -- Dừng lại và bay vào khi thấy đảo
+-- [[ NMD HUB - FIXED & FULL 2026 ]] --
+-- Producer: MDyeuem
 
+-- 1. FIX LỖI KHÔNG LÊN MENU (Cập nhật Library)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- 2. KHỞI TẠO CẤU HÌNH (Tránh lỗi biến nil)
+_G.Settings = {
+    AutoFarm = false,
+    Distance = 7,
+    AutoFindIsland = false,
+    AutoLeviathan = false,
+    AutoRaid = false,
+    BoatSpeed = 45,
+    AntiAdmin = true
+}
+
+-- 3. TẠO WINDOW
+local Window = Rayfield:CreateWindow({
+   Name = "NMD HUB | MDyeuem 🌊",
+   LoadingTitle = "NMD HUB - ĐANG KHỞI CHẠY...",
+   LoadingSubtitle = "by MDyeuem",
+   ConfigurationSaving = { Enabled = true, FolderName = "NMD_HUB_Config", FileName = "Ultimate" },
+   Keybind = "RightControl"
+})
+
+-- ========================================================
+-- [ CÁC TAB CHÍNH ]
+-- ========================================================
+
+-- TAB MAIN
+local MainTab = Window:CreateTab("Main ⚔️", 4483345998)
+MainTab:CreateToggle({
+    Name = "Auto Farm Level (Fast Attack - No Skill)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoFarm = v end,
+})
+MainTab:CreateSlider({
+    Name = "Distance (Khoảng cách quái)",
+    Range = {1, 15},
+    Increment = 1,
+    CurrentValue = 7,
+    Callback = function(v) _G.Settings.Distance = v end,
+})
+
+-- TAB ISLAND (Cơ chế Tự Dừng & Bay vào)
+local IslandTab = Window:CreateTab("Island 🏝️", 4483345998)
+IslandTab:CreateToggle({
+    Name = "Auto Find Mirage/Frozen (Tự dừng & Bay vào)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoFindIsland = v end,
+})
+IslandTab:CreateToggle({
+    Name = "Auto Kill Leviathan (Spam Skill)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoLeviathan = v end,
+})
+
+-- TAB RAID (Bring Mob)
+local RaidTab = Window:CreateTab("Raid 🍎", 4483345998)
+RaidTab:CreateToggle({
+    Name = "Auto Raid (Gom quái cực mạnh)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoRaid = v end,
+})
+
+-- TAB SETTINGS
+local SettingTab = Window:CreateTab("Settings ⚙️", 4483345998)
+SettingTab:CreateToggle({
+    Name = "Anti-Admin (Auto Hop)",
+    CurrentValue = true,
+    Callback = function(v) _G.Settings.AntiAdmin = v end,
+})
+
+-- ========================================================
+-- [ LOGIC THỰC THI - BACKEND ]
+-- ========================================================
+
+-- Logic Tìm Đảo (Quét liên tục, thấy là dừng thuyền)
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.AutoFindIsland then
+            local Target = workspace.Map:FindFirstChild("Mirage Island") or workspace.Map:FindFirstChild("Frozen Dimension")
+            if Target then
+                _G.Settings.AutoFindIsland = false -- Dừng quét ngay
+                pcall(function()
+                    -- Dừng thuyền
+                    for _, v in pairs(workspace.Vehicles:GetChildren()) do
+                        if v:FindFirstChild("VehicleSeat") and v.VehicleSeat.Occupant == game.Players.LocalPlayer.Character.Humanoid then
+                            v.VehicleSeat.Anchored = true
+                        end
+                    end
+                    -- Teleport vào tâm đảo
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target:GetModelCFrame() * CFrame.new(0, 50, 0)
+                end)
+                Rayfield:Notify({Title = "NMD HUB", Content = "Đã thấy "..Target.Name.."! Đã đáp cánh.", Duration = 5})
+            end
+        end
+    end
+end)
+
+-- Logic Farm (Bring + Fast Attack)
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.Settings.AutoFarm or _G.Settings.AutoRaid then
+            pcall(function()
+                -- Tìm quái gần nhất (Ví dụ đơn giản, chủ tịch lắp hàm GetEnemies vào đây)
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                        -- Bring quái
+                        enemy.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -_G.Settings.Distance)
+                        enemy.HumanoidRootPart.CanCollide = false
+                        -- Fast Attack
+                        game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.floor(tick() * 1000))
+                        game:GetService("ReplicatedStorage").Modules.Net.RemoteEvent:FireServer("Attack", {[1] = enemy.HumanoidRootPart, [2] = enemy.Humanoid})
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Bảo mật (Anti-Admin)
+task.spawn(function()
+    while task.wait(5) do
+        if _G.Settings.AntiAdmin then
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p:GetRankInGroup(2853313) > 0 then
+                    game:GetService("TeleportService"):Teleport(game.PlaceId) -- Tự nhảy server
+                end
+            end
+        end
+    end
+end)
+
+Rayfield:Notify({Title = "NMD HUB", Content = "Script Loaded! Nhấn RightControl để đóng/mở.", Duration = 5})
 task.spawn(function()
     while task.wait(1) do
         if _G.AutoFindIsland then
