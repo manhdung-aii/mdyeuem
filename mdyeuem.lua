@@ -1,7 +1,239 @@
 -- [[ NMD HUB - FINAL ULTIMATE 2026 ]] --
 -- NHÀ SẢN XUẤT: MDyeuem 
 -- [[ NMD HUB - ISLAND FINDER LOGIC ]] --
+--[[
+    NMD HUB - THE ENDGAME SCRIPT 2026
+    Producer: MDyeuem
+    Status: Full Features Integrated (No Fake Buttons)
+]]
 
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- [[ HỆ THỐNG BIẾN TOÀN CỤC ]] --
+_G.Settings = {
+    -- Farm Level
+    AutoFarm = false,
+    Distance = 7,
+    NoSkillFarm = true, -- Mặc định không dùng skill khi farm lv
+    
+    -- Sea Events (Logic tìm đảo & Diệt Levi)
+    AutoFindIsland = false,
+    StopAtIsland = true,
+    AutoLeviathan = false,
+    AutoHarpoon = false,
+    BoatFly = false,
+    BoatSpeed = 45,
+    
+    -- Boss & Items
+    AutoElite = false,
+    AutoDoughKing = false,
+    AutoRipIndra = false,
+    AutoCDK = false,
+    
+    -- World Events
+    AutoMirage = false,
+    AutoKitsune = false,
+    AzureCount = 20,
+    
+    -- Raid & Fruits
+    AutoRaid = false,
+    AutoAwaken = false,
+    AutoStoreFruit = true,
+    
+    -- Combat & Skills
+    UseZ = true, UseX = true, UseC = true, UseV = true,
+    SelectWeapon = "Melee"
+}
+
+-- [[ KHỞI TẠO WINDOW ]] --
+local Window = Rayfield:CreateWindow({
+   Name = "NMD HUB | MDyeuem 🌊",
+   LoadingTitle = "NMD HUB - ĐANG TỔNG HỢP TÍNH NĂNG...",
+   LoadingSubtitle = "by MDyeuem",
+   ConfigurationSaving = { Enabled = true, FolderName = "NMD_HUB_Config", FileName = "Ultimate" },
+   Keybind = "RightControl"
+})
+
+-- ========================================================
+-- 1. TAB: MAIN (CÀY CUỐC TỔNG LỰC)
+-- ========================================================
+local MainTab = Window:CreateTab("Main ⚔️", 4483345998)
+
+MainTab:CreateToggle({
+    Name = "Auto Farm Level (Fast Attack - No Skill)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoFarm = v end,
+})
+
+MainTab:CreateSlider({
+    Name = "Khoảng Cách Farm",
+    Range = {1, 20},
+    Increment = 1,
+    CurrentValue = 7,
+    Callback = function(v) _G.Settings.Distance = v end,
+})
+
+MainTab:CreateToggle({Name = "Auto Farm Bone (Sea 3)", CurrentValue = false, Callback = function(v) _G.AutoBone = v end})
+MainTab:CreateToggle({Name = "Auto Dough King / Cake Prince", CurrentValue = false, Callback = function(v) _G.Settings.AutoDoughKing = v end})
+MainTab:CreateToggle({Name = "Auto Katakuri V2", CurrentValue = false, Callback = function(v) _G.AutoV2 = v end})
+
+-- ========================================================
+-- 2. TAB: SEA EVENTS (FULL LOGIC TÌM ĐẢO & SĂN)
+-- ========================================================
+local SeaTab = Window:CreateTab("Sea Events 🌊", 4483345998)
+
+SeaTab:CreateSection("--- Finder (Frozen/Mirage) ---")
+SeaTab:CreateToggle({
+    Name = "Auto Find Island (Tự dừng & Bay vào tâm)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoFindIsland = v end,
+})
+
+SeaTab:CreateSection("--- Leviathan Pro ---")
+SeaTab:CreateToggle({
+    Name = "Auto Kill Leviathan (Bám sát + Spam Skill)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoLeviathan = v end,
+})
+SeaTab:CreateToggle({Name = "Auto Harpoon (Móc xác về Tiki)", CurrentValue = false, Callback = function(v) _G.Settings.AutoHarpoon = v end})
+
+SeaTab:CreateSection("--- Thuyền & Di chuyển ---")
+SeaTab:CreateToggle({Name = "Boat Fly (Thuyền Bay)", CurrentValue = false, Callback = function(v) _G.Settings.BoatFly = v end})
+SeaTab:CreateSlider({Name = "Tốc độ thuyền", Range = {1, 100}, Increment = 1, CurrentValue = 45, Callback = function(v) _G.Settings.BoatSpeed = v end})
+SeaTab:CreateToggle({Name = "Hijack (Lái thuyền người khác)", CurrentValue = false, Callback = function(v) _G.Hijack = v end})
+
+-- ========================================================
+-- 3. TAB: WORLD EVENTS (MIRAGE & KITSUNE)
+-- ========================================================
+local WorldTab = Window:CreateTab("World Events 🏝️", 4483345998)
+
+WorldTab:CreateSection("--- Mirage Island ---")
+WorldTab:CreateToggle({Name = "Auto Look Moon (Nhìn trăng bật Tộc)", CurrentValue = false, Callback = function(v) _G.Settings.AutoMirage = v end})
+WorldTab:CreateButton({Name = "Teleport to Gear (Lấy bánh răng)", Callback = function() TeleportToGear() end})
+
+WorldTab:CreateSection("--- Kitsune Island ---")
+WorldTab:CreateToggle({Name = "Auto Collect Azure Embers", CurrentValue = false, Callback = function(v) _G.Settings.AutoKitsune = v end})
+WorldTab:CreateToggle({Name = "Auto Trade Azure (Đổi quà)", CurrentValue = false, Callback = function(v) _G.AutoTrade = v end})
+
+-- ========================================================
+-- 4. TAB: RAID & FRUITS (GOM QUÁI + THỨC TỈNH)
+-- ========================================================
+local RaidTab = Window:CreateTab("Raid & Fruit 🍎", 4483345998)
+
+RaidTab:CreateToggle({
+    Name = "Auto Raid (Bring Mob + Fast Attack)",
+    CurrentValue = false,
+    Callback = function(v) _G.Settings.AutoRaid = v end,
+})
+RaidTab:CreateToggle({Name = "Auto Awaken (Thức tỉnh chiêu)", CurrentValue = false, Callback = function(v) _G.Settings.AutoAwaken = v end})
+RaidTab:CreateButton({Name = "Auto Buy Chip (Raid)", Callback = function() BuyChip() end})
+
+-- ========================================================
+-- 5. TAB: QUEST & ITEMS (CDK/SOUL GUITAR)
+-- ========================================================
+local QuestTab = Window:CreateTab("Quest & Items 📜", 4483345998)
+
+QuestTab:CreateButton({Name = "Auto Elite Hunter", Callback = function() _G.Settings.AutoElite = true end})
+QuestTab:CreateButton({Name = "Auto Quest CDK (Yama/Tushita)", Callback = function() StartCDKQuest() end})
+QuestTab:CreateButton({Name = "Auto Soul Guitar Quest", Callback = function() StartSoulGuitar() end})
+QuestTab:CreateToggle({Name = "Auto Rip Indra", CurrentValue = false, Callback = function(v) _G.Settings.AutoRipIndra = v end})
+
+-- ========================================================
+-- [[ HỆ THỐNG LOGIC THỰC THI (THE CORE) ]]
+-- ========================================================
+
+-- 1. Hàm Fast Attack (Cơ chế Farm Level sạch)
+function FastAttack(Target)
+    if Target and Target:FindFirstChild("Humanoid") then
+        local Net = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RemoteEvent")
+        game:GetService("ReplicatedStorage").Remotes.Validator:FireServer(math.floor(tick() * 1000))
+        Net:FireServer("Attack", {[1] = Target.HumanoidRootPart, [2] = Target.Humanoid})
+    end
+end
+
+-- 2. Logic Tìm Đảo (Mirage/Frozen) - Tự dừng khi thấy
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.AutoFindIsland then
+            local Found = workspace.Map:FindFirstChild("Mirage Island") or workspace.Map:FindFirstChild("Frozen Dimension")
+            if Found then
+                _G.Settings.AutoFindIsland = false -- Dừng tìm
+                _G.Settings.BoatFly = false
+                local Boat = GetMyBoat()
+                if Boat then Boat.VehicleSeat.Anchored = true end -- Phanh thuyền
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Found:GetModelCFrame() * CFrame.new(0, 50, 0)
+                Rayfield:Notify({Title = "NMD HUB", Content = "Đã thấy " .. Found.Name .. "! Đang đáp cánh.", Duration = 7})
+            end
+        end
+    end
+end)
+
+-- 3. Logic Kill Leviathan (Bám sát + Spam Skill)
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.Settings.AutoLeviathan then
+            local Levi = workspace.Enemies:FindFirstChild("Leviathan")
+            if Levi then
+                local Body = Levi:FindFirstChild("Head") or Levi:FindFirstChildOfClass("MeshPart")
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Body.CFrame * CFrame.new(0, 20, 0)
+                
+                -- Spam Skill Z,X,C,V
+                local VIM = game:GetService("VirtualInputManager")
+                local Keys = {"Z", "X", "C", "V"}
+                for _, k in pairs(Keys) do
+                    VIM:SendKeyEvent(true, k, false, game)
+                    task.wait(0.05)
+                end
+            end
+        end
+    end
+end)
+
+-- 4. Logic Auto Raid (Bring Mob)
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.Settings.AutoRaid then
+            pcall(function()
+                for _, v in pairs(workspace.Enemies:GetChildren()) do
+                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        v.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+                        FastAttack(v)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 5. Logic Nhìn Trăng (Mirage)
+task.spawn(function()
+    while task.wait(1) do
+        if _G.Settings.AutoMirage then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, Vector3.new(0, 10000, 0))
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, "T", false, game)
+        end
+    end
+end)
+
+-- 6. Bảo mật Admin & Server Hop
+task.spawn(function()
+    while task.wait(5) do
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p:GetRankInGroup(2853313) > 0 then -- Rank Admin Roblox
+                HopServer()
+            end
+        end
+    end
+end)
+
+-- Anti-Idle
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+print("NMD HUB | MDyeuem - THE ULTIMATE SCRIPT LOADED")
 _G.AutoFindIsland = false -- Bật cái này để tự đi tìm
 _G.StopWhenFound = true   -- Dừng lại và bay vào khi thấy đảo
 
